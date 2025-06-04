@@ -1,0 +1,148 @@
+\chapter{静态法测杨氏模量实验Python数据处理}
+
+\section{实验原理}
+
+杨氏模量（Young's modulus，记作 $E$）描述材料在弹性形变范围内的抗拉伸或压缩能力。定义如下：
+
+\[
+E = \frac{\sigma}{\varepsilon} = \frac{F / S}{\Delta L / L} = \frac{F / \left( \frac{1}{4} \pi d^2 \right)}{ D \left( \frac{\Delta x }{2H}  \right) / L} = \frac{8 m g LH}{\pi d^2 D \Delta x}
+\]
+
+其中：
+
+\begin{itemize}
+  \item $\sigma$：应力；
+  \item $\varepsilon$：应变;
+  \item $F$：施加的拉力；
+  \item $S$：横截面积；
+  \item $L$：钢丝原始长度；
+  \item $\Delta L$：伸长量；
+  \item $d$：直径；
+  \item $\Delta x$：标尺上光标移动的距离；
+  \item $D$：光杠杆常数，即转轴到动足的距离；
+  \item $H$：镜面到标尺间的距离；
+\end{itemize}
+
+\section{测量数据}
+以下为测量数据，保存在名为：Youngs\_modulus\_data.csv的文件中（逗号分隔值，Comma-Separated Values，用来存储数据，可以用Excel、WPS等工具打开，也可以用Python读取或写入数据)：\\
+============Youngs\_modulus\_data.csv============\\
+name, value\\
+g,9.8,m/s\^{}2\\
+L,652.0,mm\\
+H,684.0,mm\\
+D,38.64,mm\\
+d0,0.500,mm\\
+d1,0.497,mm\\
+d2,0.499,mm\\
+d3,0.503,mm\\
+d4,0.496,mm\\
+d5,0.506,mm\\
+m0,1.00,kg\\
+m1,1.00,kg\\
+m2,1.00,kg\\
+m3,1.00,kg\\
+m4,1.00,kg\\
+m5,1.00,kg\\
+xa0,24.1,mm\\
+xa1,30.3,mm\\
+xa2,37.1,mm\\
+xa3,43.3,mm\\
+xa4,49.7,mm\\
+xa5,56.1,mm\\
+xb0,25.1,mm\\
+xb1,31.8,mm\\
+xb2,38.9,mm\\
+xb3,45.1,mm\\
+xb4,51.6,mm\\
+xb5,57.9,mm\\
+==================================================\\
+
+\section{数据处理}
+
+\subsection{读取数据}
+请用csv模块读取文件Youngs\_modulus\_data.csv的数据。其中，部分量可以读取至列表中，例如命名为d、m、xa、xb的列表，以方便对数据进行循环遍历。
+
+\subsection{数据预处理}
+注意物理实验中要求保留有效数字的规则。尤其摄入规则采用“银行家舍入”或“IEEE 754 round half to even”（round函数）
+
+为什么叫“银行家舍入”？
+
+因为银行和会计处理大量的交易时，如果总是向上舍入（如传统“四舍五入”），就会导致累计误差向上偏移，最终可能形成系统性偏差。
+
+银行家舍入通过“5看偶数”的方式，在长时间大量数据中抵消了向上或向下的偏差，使误差统计上趋于零，更公平。
+
+请按照以下步骤计算数据相关数据，
+
+\begin{enumerate}
+  \item $\pi$ 的取值：\\
+  import math \\
+  pi = math.pi \\
+  或者：\\
+  pi = math.acos(-1) \\
+  \item 计算$x_{i} = \left( x_{ai} + x_{bi} \right) / 2$
+  \item 计算$dx_{ai} = (x_{i+1} - x_{i})$
+  \item 计算$dx_{bi} = (x_{i+1} - x_{0})$
+  \item 计算$d$的平均值$dbar = \overline{d}$，即$dbar = (1/6)\sum\limits_{i=0}^{5}d_i$，其中$\overline{d}$是数学符号，$dbar$是python变量名称。
+  \item 计算$dx_{ai}$的平均值$dxa = \overline{dx_{a}}$，即$dxa = (1/6)\sum\limits_{i=0}^{5}dx_{ai}$，其中$\overline{dx_{a}}$是数学符号，$dxa$是python变量名称。
+\end{enumerate}
+
+\subsection{用增量法计算杨氏模量和其不确定度}
+
+\begin{enumerate}
+  \item 将各物理量转化为国际单位，并根据以下公式计算杨氏模量：$$E = \frac{8mgLH}{\pi \overline{d}^2 D \overline{dx_a} }$$
+  \item 赋值不确定度：\\
+  $uL \equiv u(L) = 0.5$ mm，\\
+  $uH \equiv u(H) = 0.5$ mm，\\
+  $uD \equiv u(D) = 0.02$ mm，\\
+  $udi \equiv u(d_i) = 0.004$ mm\\
+  $uxi  \equiv u(x_i) = 0.5$ mm
+  \item 计算d的不确定度：$$ud \equiv u(\overline{d}) = \frac{u(d_i)}{\sqrt{6}} $$
+  \item 计算$\overline{dx_a}$的不确定度：
+  $$
+  udx 
+  \equiv u(\overline{dx_a})
+  = 
+  \sqrt{ 
+        \frac{\sum\limits_{i=0}^{5} \left( dx_{ai} - \overline{dx_a} \right)^2}
+        {6\times5} 
+    + \left( \frac{uxi}{\sqrt{3}} \right)^2
+  } $$
+  \item 根据以下公式，计算杨氏模量的不确定度
+  $$
+  uE \equiv u(E) = E
+  \sqrt{
+  \left[  \frac{u(L)}{L} \right]^2 + 
+  \left[  \frac{u(H)}{H} \right]^2 + 
+  \left[  \frac{u(D)}{D} \right]^2 + 
+  \left[ 2\frac{u(\overline{d})}{\overline{d}} \right]^2 + 
+  \left[ \frac{u(\overline{dx_a})}{\overline{dx_a}} \right]^2
+  }
+  $$
+  \item $u(E)$ 取一位有效数字，$E$ 的小数位与$u(E)$对齐，写出最后的结果：Young's Modulus = $E \pm u(E)$
+\end{enumerate}
+
+\subsection{用最小二乘法计算杨氏模量和其相关系数}
+
+\begin{enumerate}
+  \item 根据以下公式：
+  $$Y_i \equiv \ dx_{bi} = \frac{8gLH}{\pi d^2 DE} m_i $$
+  计算：
+  $$mbar = \overline{m} = \frac{1}{6} \sum\limits_{i=0}^5 m_i$$
+  $$mYbar = \overline{mY} = \frac{1}{6} \sum\limits_{i=0}^5 m_i Y_i$$
+  $$Ybar = \overline{Y} = \frac{1}{6} \sum\limits_{i=0}^5 Y_i$$
+  $$m2bar = \overline{m^2} = \frac{1}{6} \sum\limits_{i=0}^5 m_i^2$$
+  $$Y2bar = \overline{Y^2} = \frac{1}{6} \sum\limits_{i=0}^5 Y_i^2$$
+  \item 根据以下公式计算$b$：
+  $$b = \frac{\overline{m}\cdot \overline{Y} - \overline{mY}}{\overline{m}^2 - \overline{m^2}}$$
+   \item 根据以下公式计算杨氏模量$E$：
+  $$E = \frac{8gLH}{\pi d^2 Db}$$
+  \item 根据以下公式计算相关系数：
+  $$gamma \equiv \gamma = 
+  \frac{\overline{mY} - \overline{m} \cdot\overline{Y} }
+  {\sqrt{\left[ \overline{m^2} - \overline{m}^2 \right] \left[ \overline{Y^2} - \overline{Y}^2 \right]}}$$
+  \item 按照物理实验对作图的要求（《大学物理实验（第二版），牛原著，2.1.2作图法》），将以上数据点和拟合直线输出到一张图中，图片格式可以是png。
+\end{enumerate}
+
+\subsection{输出结果到report\_Young.txt}
+
+将以上整理的数据，用Python输出到report\_Young.txt文件中，其计算数据通过python语句进行格式化输出，按照规则保留合理的有效位数。
